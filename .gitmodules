@@ -1,0 +1,9 @@
+[submodule "glm"]
+	path = glm
+	url = https://github.com/g-truc/glm.git
+[submodule "sdl"]
+	path = sdl
+	url = https://github.com/libsdl-org/sdl.git
+[submodule "tracy"]
+	path = tracy
+	url = https://github.com/wolfpld/tracy.git
