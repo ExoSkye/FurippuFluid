@@ -5,7 +5,7 @@ set(CMAKE_CXX_STANDARD 20)
 option(PROFILE "Profile" OFF)
 
 add_subdirectory(glm)
-add_subdirectory(SDL)
+add_subdirectory(sdl)
 
 add_executable(FurippuFluid main.cpp tracy/TracyClient.cpp)
 
