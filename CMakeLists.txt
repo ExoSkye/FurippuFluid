@@ -10,7 +10,7 @@ add_subdirectory(sdl)
 add_executable(FurippuFluid main.cpp tracy/TracyClient.cpp)
 
 target_include_directories(FurippuFluid PUBLIC tracy)
-target_link_libraries(FurippuFluid PUBLIC SDL2 glm)
+target_link_libraries(FurippuFluid PUBLIC pthread SDL2 glm)
 
 if(PROFILE)
     target_compile_definitions(FurippuFluid PUBLIC TRACY_ENABLE)
