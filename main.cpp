@@ -5,8 +5,8 @@
 #include "viewer.hpp"
 
 #define TYPE double
-#define X 1001
-#define Y 1001
+#define X 1000
+#define Y 1000
 
 bool toClose = false;
 
@@ -24,7 +24,7 @@ void run_viewer(MDArray<TYPE, X, Y>* toDraw) {
 }
 
 int main(int, char**) {
-    tracy::SetThreadName("Main Thread");
+    tracy::SetThreadName("Simulator Thread");
 
     FluidSim<TYPE, X, Y> sim{};
     {
@@ -44,12 +44,13 @@ int main(int, char**) {
     {
         ZoneScopedN("Main loop")
 
-        std::thread viewer_thread(run_viewer, &sim.Density);
+        std::thread viewer_thread(run_viewer, &sim.Density.get_current());
 
         while (!toClose) {
             ZoneScopedN("Running main loop")
-            sim.Prev_Density = sim.Density;
-            sim.diffuse(sim.Density, sim.Prev_Density, 0.1, 0.00001, 20);
+            sim.Density.swap();
+            sim.diffuse(sim.Density, 0.1, 0.01, 10);
+            FrameMark
         }
         {
             ZoneScopedN("Waiting for viewer to exit")

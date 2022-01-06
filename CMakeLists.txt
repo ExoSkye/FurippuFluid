@@ -14,4 +14,5 @@ target_link_libraries(FurippuFluid PUBLIC pthread SDL2 glm)
 
 if(PROFILE)
     target_compile_definitions(FurippuFluid PUBLIC TRACY_ENABLE)
+    target_link_libraries(FurippuFluid PUBLIC dl)
 endif()

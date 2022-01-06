@@ -49,6 +49,7 @@ class Viewer {
 
     ~Viewer() {
         SDL_DestroyWindow(m_Window);
+        exit(0);
     }
   private:
     int m_Scale;
