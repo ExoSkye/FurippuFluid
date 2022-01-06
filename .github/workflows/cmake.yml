@@ -78,7 +78,7 @@ jobs:
       
     - name: List Directories
       shell: bash
-      run: ls -la build/**
+      run: ls -la ${{runner.workspace}}/build/**
       
 #    - name: Upload a Build Artifact
 #      uses: actions/upload-artifact@v2.2.0
