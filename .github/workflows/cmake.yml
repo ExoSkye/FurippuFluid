@@ -77,8 +77,8 @@ jobs:
       run: cmake --build . --config $BUILD_TYPE
       
     - name: List Directories
-      shell: bash
-      run: ls -la ${{runner.workspace}}/build/**
+      if: ${{ matrix.config.os }} == "windows-latest"
+      run: ls ${{runner.workspace}}/build/**
       
 #    - name: Upload a Build Artifact
 #      uses: actions/upload-artifact@v2.2.0
