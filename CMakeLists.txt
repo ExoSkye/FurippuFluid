@@ -16,3 +16,11 @@ if(PROFILE)
     target_compile_definitions(FurippuFluid PUBLIC TRACY_ENABLE)
     target_link_libraries(FurippuFluid PUBLIC dl)
 endif()
+
+install(targets FurippuFluid)
+
+set(CPACK_IFW_PACKAGE_TITLE "FurippuFluid")
+set(CPACK_IFW_PACKAGE_PUBLISHER "ProtoByter")
+
+include(CPack REQUIRED)
+include(CPackIFW REQUIRED)
