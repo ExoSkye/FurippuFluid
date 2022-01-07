@@ -17,7 +17,7 @@ if(PROFILE)
     target_link_libraries(FurippuFluid PUBLIC dl)
 endif()
 
-install(targets FurippuFluid)
+install(TARGETS FurippuFluid)
 
 set(CPACK_IFW_PACKAGE_TITLE "FurippuFluid")
 set(CPACK_IFW_PACKAGE_PUBLISHER "ProtoByter")
