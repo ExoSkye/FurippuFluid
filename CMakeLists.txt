@@ -9,6 +9,9 @@ add_subdirectory(sdl)
 
 add_executable(FurippuFluid main.cpp tracy/TracyClient.cpp)
 
+set_property(TARGET FurippuFluid PROPERTY
+  MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+
 target_include_directories(FurippuFluid PUBLIC tracy)
 target_link_libraries(FurippuFluid PUBLIC pthread SDL2 glm)
 
