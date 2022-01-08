@@ -3,11 +3,11 @@
 #include <glm/glm.hpp>
 #include "MDArray.hpp"
 
-template<typename T, unsigned x, unsigned y>
+template<typename T, unsigned ... Dims>
 class SwapPair {
   public:
-    MDArray<T, x, y>* current = &mArray1;
-    MDArray<T, x, y>* previous = &mArray2;
+    MDArray<T, Dims...>* current = &mArray1;
+    MDArray<T, Dims...>* previous = &mArray2;
 
     void swap() {
         if (mSwapped) {
@@ -21,39 +21,39 @@ class SwapPair {
         mSwapped = !mSwapped;
     }
 
-    MDArray<T, x, y>& get_current() {
+    MDArray<T, Dims...>& get_current() {
         return *current;
     }
 
-    MDArray<T, x, y>& get_previous() {
+    MDArray<T, Dims...>& get_previous() {
         return *previous;
     }
 
   private:
     bool mSwapped = false;
 
-    MDArray<T, x, y> mArray1{};
-    MDArray<T, x, y> mArray2{};
+    MDArray<T, Dims...> mArray1{};
+    MDArray<T, Dims...> mArray2{};
 };
 
 template<typename T, unsigned x, unsigned y>
 class FluidSim {
   public:
-    SwapPair<T, x, y> Vx;
-    SwapPair<T, x, y> Vy;
+    typedef glm::vec<2, T, glm::defaultp> vectorT;
+    SwapPair<T, x, y> velocity_x;
+    SwapPair<T, x, y> velocity_y;
+    SwapPair<T, x, y> density;
 
-    SwapPair<T, x, y> Density;
-
-    void solve(MDArray<T, x, y>& values, MDArray<T, x, y>& prev_values, T k, T c, int iter) {
+    void solve(MDArray<T, x, y>& values, MDArray<T, x, y>& prev_values, T diff, T dt, int iter) {
         ZoneScopedN("Running solve")
+        T k = dt * diff * (m_Size.x - 2) * (m_Size.y - 2);
+        T c = 1 + 4 * k;
         T cRecip = 1.0 / c;
 
         for (int cur_iter = 0; cur_iter < iter; cur_iter++) {
             ZoneScopedN("Running GaussSeidel iteration")
             for (int j = 1; j < m_Size.y - 1; j++) {
-                //ZoneScopedN("Running Y iteration")
                 for (int i = 1; i < m_Size.x - 1; i++) {
-                    //ZoneScopedN("Running X iteration")
                     values[i][j] =
                         (prev_values[i][j]
                             + k * (
@@ -68,15 +68,90 @@ class FluidSim {
         }
     }
 
-    void diffuse(SwapPair<T, x, y>& values, T diff, T dt, int iter) {
-        ZoneScopedN("Running diffuse")
-        float a = dt * diff * (m_Size.x - 2) * (m_Size.y - 2);
-        solve(values.get_current(), values.get_previous(), a, 1 + 4 * a, iter);
+    void diffuse_density(T diff, T dt, int iter) {
+        ZoneScopedN("Running diffuse on density")
+        solve(density.get_current(), density.get_previous(), diff, dt, iter);
+    }
+
+    void diffuse_velocity(T diff, T dt, int iter) {
+        ZoneScopedN("Running diffuse on velocity")
+        solve(velocity_x.get_current(), velocity_x.get_previous(), diff, dt, iter);
+        solve(velocity_y.get_current(), velocity_y.get_previous(), diff, dt, iter);
+    }
+
+    void advect_density(T dt) {
+        ZoneScopedN("Running diffuse on density")
+        advect(density.get_current(), density.get_previous(),
+               velocity_x.get_current(), velocity_y.get_current(), dt
+        );
+    }
+
+    void advect_velocity(T dt) {
+        ZoneScopedN("Running diffuse on velocity")
+        advect(
+            velocity_x.get_current(), velocity_x.get_previous(),
+            velocity_x.get_previous(), velocity_y.get_previous(), dt
+        );
+        advect(
+            velocity_y.get_current(), velocity_y.get_previous(),
+            velocity_x.get_previous(), velocity_y.get_previous(), dt
+        );
+    }
+
+    void advect(MDArray<T, x, y>& values, MDArray<T, x, y>& prev_values,
+                MDArray<T, x, y>& velo_x, MDArray<T, x, y>& velo_y, T dt) {
+
+        glm::vec2 dt_vec = {dt * (m_Size.x - 2), dt * (m_Size.y - 2)};
+
+        for (int j = 1; j < m_Size.x - 1; j++) {
+            for (int i = 1; i < m_Size.y - 1; i++) {
+                glm::vec2 coord = {
+                    (T)i - (dt_vec.x * velo_x[i][j]),
+                    (T)j - (dt_vec.y * velo_y[i][j])
+                };
+
+                if (coord.x < 0.5) coord.x = 0.5;
+                if (coord.x > m_Size.x + 0.5) coord.x = m_Size.x + 0.5;
+
+                if (coord.y < 0.5) coord.y = 0.5;
+                if (coord.y > m_Size.y + 0.5) coord.y = m_Size.y + 0.5;
+
+                vectorT coord0 = {
+                    (int)floor((double)coord.x),
+                    (int)floor((double)coord.y),
+                };
+
+                vectorT coord1 = coord0 + vectorT{1, 1};
+
+                vectorT coord_s1 = {
+                    coord.x - coord0.x,
+                    coord.y - coord0.y
+                };
+
+                vectorT coord_s0 = vectorT{1, 1} - coord_s1;
+
+                values[i][j] =
+                    coord_s0.x * (
+                        (coord_s0.y * prev_values[coord0.x][coord0.y]) +
+                        (coord_s1.y * prev_values[coord0.x][coord1.y])
+                    ) +
+                    coord_s1.x * (
+                        (coord_s0.y * prev_values[coord1.x][coord0.y]) +
+                        (coord_s1.y * prev_values[coord1.x][coord1.y])
+                    );
+            }
+        }
     }
 
     void set_density(T value, unsigned int x_coord, unsigned int y_coord) {
         ZoneScopedN("Setting density at point")
-        Density.get_current()[x_coord][y_coord] = value;
+        density.get_current()[x_coord][y_coord] = value;
+    }
+
+    void set_velocity(vectorT value, unsigned int x_coord, unsigned int y_coord) {
+        ZoneScopedN("Setting density at point")
+        velocity_x.get_current()[x_coord][y_coord] = value.x;
+        velocity_y.get_current()[x_coord][y_coord] = value.y;
     }
 
   private:

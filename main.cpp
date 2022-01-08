@@ -36,7 +36,8 @@ int main(int, char**) {
         }
         for (int i = X / 10 * 4; i < X / 10 * 6; i++) {
             for (int j = Y / 10 * 4; j < Y / 10 * 6; j++) {
-                sim.set_density(1.0, i, j);
+                sim.set_density(10.0, i, j);
+                sim.set_velocity(glm::vec2{0, 1}, i, j);
             }
         }
     }
@@ -44,12 +45,23 @@ int main(int, char**) {
     {
         ZoneScopedN("Main loop")
 
-        std::thread viewer_thread(run_viewer, &sim.Density.get_current());
+        std::thread viewer_thread(run_viewer, &sim.density.get_current());
+
+        TYPE dt = 0.01;
+        int iter = 5;
+        TYPE diff = 0.1;
 
         while (!toClose) {
             ZoneScopedN("Running main loop")
-            sim.Density.swap();
-            sim.diffuse(sim.Density, 0.1, 0.01, 10);
+            sim.diffuse_velocity(diff, dt, iter);
+            sim.velocity_x.swap();
+            sim.velocity_y.swap();
+            sim.advect_velocity(dt);
+
+            sim.diffuse_density(diff, dt, iter);
+            sim.density.swap();
+            sim.advect_density(dt);
+
             FrameMark
         }
         {
