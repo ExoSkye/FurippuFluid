@@ -74,7 +74,7 @@ jobs:
         # cmd "${{ matrix.config.environment_script }}"
 
       - name: Install dependencies on ubuntu
-        if: startsWith(matrix.config.name, 'Ubuntu_Latest_GCC')
+        if: startsWith(matrix.config.os, 'ubuntu-latest')
         run: |
           sudo apt-get update
           sudo apt-get install ninja-build cmake
