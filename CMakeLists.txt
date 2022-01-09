@@ -16,7 +16,11 @@ set_property(TARGET FurippuFluid PROPERTY
   MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
 target_include_directories(FurippuFluid PUBLIC tracy)
-target_link_libraries(FurippuFluid PUBLIC pthread SDL2 SDL2main glm)
+target_link_libraries(FurippuFluid PUBLIC SDL2 SDL2main glm)
+
+if(UNIX)
+    target_link_libraries(FurippuFluid PUBLIC pthread)
+endif()
 
 if(PROFILE)
     target_compile_definitions(FurippuFluid PUBLIC TRACY_ENABLE)
