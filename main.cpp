@@ -10,13 +10,13 @@
 
 bool toClose = false;
 
-void run_viewer(MDArray<TYPE, X, Y>* toDraw) {
+void run_viewer(MDArray<TYPE, X, Y>* density, MDArray<TYPE, X, Y>* velo_x, MDArray<TYPE, X, Y>* velo_y) {
     tracy::SetThreadName("Viewer");
     Viewer<TYPE, X, Y> viewer{1};
 
     while (true) {
         ZoneScopedN("Run viewer")
-        if (!viewer.update(*toDraw)) {
+        if (!viewer.update(*density, *velo_x, *velo_y)) {
             toClose = true;
             break;
         }
@@ -37,7 +37,6 @@ int main(int, char**) {
         for (int i = X / 10 * 4; i < X / 10 * 6; i++) {
             for (int j = Y / 10 * 4; j < Y / 10 * 6; j++) {
                 sim.set_density(10.0, i, j);
-                sim.set_velocity(glm::vec2{0, 1}, i, j);
             }
         }
     }
@@ -45,7 +44,8 @@ int main(int, char**) {
     {
         ZoneScopedN("Main loop")
 
-        std::thread viewer_thread(run_viewer, &sim.density.get_current());
+        std::thread viewer_thread(run_viewer, &sim.density.get_current(),
+                                  &sim.velocity_x.get_current(), &sim.velocity_y.get_current());
 
         TYPE dt = 0.01;
         int iter = 5;
