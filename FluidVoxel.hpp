@@ -71,23 +71,26 @@ class FluidSim {
     void diffuse_density(T diff, T dt, int iter) {
         ZoneScopedN("Running diffuse on density")
         solve(density.get_current(), density.get_previous(), diff, dt, iter);
+        density.swap();
     }
 
     void diffuse_velocity(T diff, T dt, int iter) {
         ZoneScopedN("Running diffuse on velocity")
         solve(velocity_x.get_current(), velocity_x.get_previous(), diff, dt, iter);
         solve(velocity_y.get_current(), velocity_y.get_previous(), diff, dt, iter);
+        velocity_x.swap();
+        velocity_y.swap();
     }
 
     void advect_density(T dt) {
-        ZoneScopedN("Running diffuse on density")
+        ZoneScopedN("Running advection on density")
         advect(density.get_current(), density.get_previous(),
                velocity_x.get_current(), velocity_y.get_current(), dt
         );
     }
 
     void advect_velocity(T dt) {
-        ZoneScopedN("Running diffuse on velocity")
+        ZoneScopedN("Running advection on velocity")
         advect(
             velocity_x.get_current(), velocity_x.get_previous(),
             velocity_x.get_previous(), velocity_y.get_previous(), dt
@@ -100,6 +103,8 @@ class FluidSim {
 
     void advect(MDArray<T, x, y>& values, MDArray<T, x, y>& prev_values,
                 MDArray<T, x, y>& velo_x, MDArray<T, x, y>& velo_y, T dt) {
+
+        ZoneScopedN("Running advection")
 
         glm::vec2 dt_vec = {dt * (m_Size.x - 2), dt * (m_Size.y - 2)};
 
@@ -129,6 +134,23 @@ class FluidSim {
                 };
 
                 vectorT coord_s0 = vectorT{1, 1} - coord_s1;
+
+                if (coord1.x >= x) {
+                    coord1.x = x - 1;
+                }
+
+                if (coord1.y >= y) {
+                    coord1.y = y - 1;
+                }
+
+                if (coord0.x >= x) {
+                    coord0.x = x - 1;
+                }
+
+                if (coord0.y >= y) {
+                    coord0.y = y - 1;
+                }
+
 
                 values[i][j] =
                     coord_s0.x * (

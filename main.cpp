@@ -9,6 +9,8 @@
 #define Y 1000
 
 bool toClose = false;
+bool wantToPause = false;
+bool paused = false;
 
 void run_viewer(MDArray<TYPE, X, Y>* density, MDArray<TYPE, X, Y>* velo_x, MDArray<TYPE, X, Y>* velo_y) {
     tracy::SetThreadName("Viewer");
@@ -16,7 +18,7 @@ void run_viewer(MDArray<TYPE, X, Y>* density, MDArray<TYPE, X, Y>* velo_x, MDArr
 
     while (true) {
         ZoneScopedN("Run viewer")
-        if (!viewer.update(*density, *velo_x, *velo_y)) {
+        if (!viewer.update(*density, *velo_x, *velo_y, &wantToPause, &paused)) {
             toClose = true;
             break;
         }
@@ -52,14 +54,17 @@ int main(int, char**) {
         TYPE diff = 0.1;
 
         while (!toClose) {
+            if (wantToPause) {
+                paused = true;
+                while (wantToPause);
+                paused = false;
+            }
+
             ZoneScopedN("Running main loop")
             sim.diffuse_velocity(diff, dt, iter);
-            sim.velocity_x.swap();
-            sim.velocity_y.swap();
             sim.advect_velocity(dt);
 
             sim.diffuse_density(diff, dt, iter);
-            sim.density.swap();
             sim.advect_density(dt);
 
             FrameMark
