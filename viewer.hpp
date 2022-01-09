@@ -12,6 +12,7 @@ class Viewer {
     enum ViewType {
         Density,
         Velocity,
+        Combined,
         Add,
         Subtract
     };
@@ -79,6 +80,10 @@ class Viewer {
                             m_ViewType = Density;
                             break;
 
+                        case SDLK_c:
+                            m_ViewType = Combined;
+                            break;
+
                         case SDLK_KP_PLUS:
                             m_ControlType = Add;
                             break;
@@ -92,39 +97,52 @@ class Viewer {
 
         SDL_Surface* surface = SDL_GetWindowSurface(m_Window);
 
-        T max_value = 0;
+        T max_value_density = 0;
+        T max_value_velocity = 0;
 
-        if (m_ViewType == Density) {
-            for (int i = 0; i < x; i++) {
-                for (int j = 0; j < y; j++) {
-                    max_value = std::max(density[i][j], max_value);
-                }
-            }
 
-            for (int i = 0; i < x; i++) {
-                for (int j = 0; j < y; j++) {
-                    double t = density[i][j] / max_value;
-                    uint8_t darkness = t * 255;
-                    ((uint32_t*) surface->pixels)[j * (surface->pitch / sizeof(uint32_t)) + i] =
-                        SDL_MapRGBA(surface->format, darkness, darkness, darkness, 255);
+        for (int i = 0; i < x; i++) {
+            for (int j = 0; j < y; j++) {
+                if (m_ViewType == Density || m_ViewType == Combined) {
+                    max_value_density = std::max(density[i][j], max_value_density);
                 }
+                if (m_ViewType == Velocity || m_ViewType == Combined) {
+                    max_value_velocity = std::max(glm::abs(velo_x[i][j]), max_value_velocity);
+                    max_value_velocity = std::max(glm::abs(velo_y[i][j]), max_value_velocity);
+                }
+
             }
         }
-        else {
-            for (int i = 0; i < x; i++) {
-                for (int j = 0; j < y; j++) {
-                    max_value = std::max(glm::abs(velo_x[i][j]), max_value);
-                    max_value = std::max(glm::abs(velo_y[i][j]), max_value);
+
+        for (int i = 0; i < x; i++) {
+            for (int j = 0; j < y; j++) {
+                uint8_t dens;
+                uint8_t veloc_x;
+                uint8_t veloc_y;
+                if (m_ViewType == Density || m_ViewType == Combined) {
+                    dens = density[i][j] / max_value_density * 255;
                 }
-            }
 
-            for (int i = 0; i < x; i++) {
-                for (int j = 0; j < y; j++) {
-                    uint8_t velo_x_scaled = glm::abs(velo_x[i][j] / max_value) * 255;
-                    uint8_t velo_y_scaled = glm::abs(velo_y[i][j] / max_value) * 255;
+                if (m_ViewType == Velocity || m_ViewType == Combined) {
+                    veloc_x = glm::abs(velo_x[i][j] / max_value_velocity) * 255;
+                    veloc_y = glm::abs(velo_y[i][j] / max_value_velocity) * 255;
+                }
 
-                    ((uint32_t*) surface->pixels)[j * (surface->pitch / sizeof(uint32_t)) + i] =
-                        SDL_MapRGBA(surface->format, 0, velo_x_scaled, velo_y_scaled, 255);
+                switch (m_ViewType) {
+                    case Density:
+                        ((uint32_t*) surface->pixels)[j * (surface->pitch / sizeof(uint32_t)) + i] =
+                            SDL_MapRGBA(surface->format, dens, dens, dens, 255);
+                        break;
+
+                    case Velocity:
+                        ((uint32_t*) surface->pixels)[j * (surface->pitch / sizeof(uint32_t)) + i] =
+                            SDL_MapRGBA(surface->format, 0, veloc_x, veloc_y, 255);
+                        break;
+
+                    case Combined:
+                        ((uint32_t*) surface->pixels)[j * (surface->pitch / sizeof(uint32_t)) + i] =
+                            SDL_MapRGBA(surface->format, dens, veloc_x, veloc_y, 255);
+                        break;
                 }
             }
         }
