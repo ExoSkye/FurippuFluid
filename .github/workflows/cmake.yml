@@ -1,4 +1,4 @@
-ame: CMake Build Matrix
+name: CMake Build Matrix
 
 on: [push, pull_request]
 
@@ -39,7 +39,9 @@ jobs:
           }
 
     steps:
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v2.4.0
+      with:
+        submodules: 'recursive'
 
     - name: Download Ninja and CMake
       shell: cmake -P {0}
