@@ -106,13 +106,6 @@ jobs:
       run: |
         string(TIMESTAMP current_date "%Y-%m-%d-%H;%M;%S" UTC)
         message("::set-output name=timestamp::${current_date}")
-        
-    - name: Install NSIS
-      if: matrix.config.os == 'windows-latest'
-      run: |
-        Invoke-Expression (New-Object System.Net.WebClient).DownloadString('https://get.scoop.sh')
-        scoop bucket add extras
-        scoop install nsis
 
     - name: Get CCache Cache
       uses: actions/cache@v1.1.0
@@ -203,7 +196,7 @@ jobs:
         execute_process(COMMAND ccache -s)
     
     - name: Install Strip
-      run: cmake --install build --prefix instdir --strip -G NSIS
+      run: cmake --install build --prefix instdir --strip
 
     - name: Pack
       working-directory: instdir
