@@ -23,7 +23,7 @@ if(UNIX)
 endif()
 
 if(WIN32)
-    set(CPACK_GENERATOR NSIS)
+    set(CPACK_GENERATOR "NSIS")
 endif()
 
 if(PROFILE)
