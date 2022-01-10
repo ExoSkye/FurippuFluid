@@ -22,6 +22,10 @@ if(UNIX)
     target_link_libraries(FurippuFluid PUBLIC pthread)
 endif()
 
+if(WIN32)
+    set(CPACK_GENERATOR NSIS)
+endif()
+
 if(PROFILE)
     target_compile_definitions(FurippuFluid PUBLIC TRACY_ENABLE)
     target_link_libraries(FurippuFluid PUBLIC dl)
