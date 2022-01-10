@@ -91,6 +91,7 @@ jobs:
             COMMAND chmod +x ${cmake_dir}/cmake
           )
         endif()
+
     - name: Download ccache
       id: ccache
       shell: cmake -P {0}
@@ -98,6 +99,7 @@ jobs:
         set(ccache_url "https://github.com/cristianadam/ccache/releases/download/v$ENV{CCACHE_VERSION}/${{ runner.os }}.tar.xz")
         file(DOWNLOAD "${ccache_url}" ./ccache.tar.xz SHOW_PROGRESS)
         execute_process(COMMAND ${CMAKE_COMMAND} -E tar xvf ./ccache.tar.xz)
+    
     - name: Prepare ccache timestamp
       id: ccache_cache_timestamp
       shell: cmake -P {0}
@@ -105,6 +107,13 @@ jobs:
         string(TIMESTAMP current_date "%Y-%m-%d-%H;%M;%S" UTC)
         message("::set-output name=timestamp::${current_date}")
         
+    - name: Install NSIS
+      if: matrix.os == 'windows-latest'
+      run: |
+        Invoke-Expression (New-Object System.Net.WebClient).DownloadString('https://get.scoop.sh')
+        scoop bucket add extras
+        scoop install nsis
+
     - name: Get CCache Cache
       uses: actions/cache@v1.1.0
       with:
