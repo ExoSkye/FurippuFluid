@@ -203,7 +203,7 @@ jobs:
         execute_process(COMMAND ccache -s)
     
     - name: Install Strip
-      run: cmake --install build --prefix instdir --strip
+      run: cmake --install build --prefix instdir --strip -G NSIS
 
     - name: Pack
       working-directory: instdir
