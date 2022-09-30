@@ -51,7 +51,7 @@ int main(int, char**) {
                                   &sim.velocity_x.get_current(), &sim.velocity_y.get_current());
 
         TYPE dt = 0.01;
-        scanf("%f\n", &dt);
+        //scanf("%f\n", &dt);
         int iter = 5;
         TYPE diff = 0.1;
 
